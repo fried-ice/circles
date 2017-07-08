@@ -4,58 +4,62 @@
 
 */
 
-
-
-
 const max_depth = 7; // Maximum count of horizontal circels
-const logging = true;
+const logging = true; // Enable logging to the console
 
-var mousedown = false;
+var mousedown = false; // If the left moused button was pressed, but not released yet
 
-var img;
+var img; // The main Image object
 
 var cc; // The main canvas
 var cc2; // 2d context of main canvas
 var osc; // Off screen canvas
 var osc2; // Off screen canvas 2d contex
-var tree; // Cirlces tree data structure
-var root; // The root node of the tree data structure
+
 var cd; // div containg the canvas
-var scale; // Linear factor describing the scale of displayed image to source image
-var i_scale // Inverse of scale
+var scale = 1; // Linear factor describing the scale of displayed image to source image
+var i_scale = 1; // Inverse of scale
+
+var treeJS = new TreeModel(); // Cirlces tree data structure
+var root; // The root node of the tree data structure
 var ln = null; // last selected node
 
-var d_dI = false;
+var dI = false; // If the image is drawed in the Background
+
 
 document.addEventListener("DOMContentLoaded", function(event) {
     cd = document.getElementById("circles_canvas_container");
-    loadNewImage();
-    img.onload = function() {
-        initializeCirclesCanvas();
-        prepareCirclesStructure();
-        redrawCircles();
-    };
+    initializeCirclesCanvas();
+    resetCirclesStructure();
+    setNewImage("https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-218355.jpg");
 });
 
+/**
+    * Register all requiered objects and event listeners
+    * This function needs to run once the page is loaded
+**/
 function initializeCirclesCanvas() {
     osc = document.createElement("canvas");
-    osc.width = img.naturalWidth;
-    osc.height = img.naturalHeight;
-
     osc2 = osc.getContext("2d");
-    osc2.drawImage(img, 0, 0);
 
     cc = document.getElementById("circles_canvas");
+    cc2 = cc.getContext("2d");
+
     document.body.onkeyup = function(e){
         if(e.keyCode == 32){ swapBackground();}
     }
+
     cc.addEventListener("mousemove", onCirclesInputHover);
     cc.addEventListener("click", onCirclesInputClick);
     cc.addEventListener("mousedown", function() {mousedown = true;});
     cc.addEventListener("mouseup", function() {mousedown = false;});
-    cc2 = cc.getContext("2d");
+}
 
-    // If the image is larger than our container, we need to scale it
+/**
+    * Calculate the factor to scale the image to the size of our canvas container at max.
+    * Do not rescale if image dimensions are smaller than the canvas div.
+**/
+function calculateScale() {
     if (osc.width > cd.clientWidth) {
         cc.width = cd.clientWidth
         scale = (osc.width / cd.clientWidth)
@@ -65,24 +69,44 @@ function initializeCirclesCanvas() {
         cc.width = osc.width;
         cc.height = osc.height;
         scale = 1;
+        i_scale = 1;
     }
 }
 
-function loadNewImage() {
+/**
+    * Load new image for pixelation.
+    * Redraws the current node tree structure for the new image.
+    * Only CORS enabled hosters are supported.
+    * @param {url} url - The identifier for the image ressource to load
+**/
+function setNewImage(url) {
     img = new Image();
     img.crossOrigin = "";
-    //img.src = "https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-512644.png";
-    img.src = "https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-218355.jpg";
+    img.src = url;
 
+    img.onload = function() {
+        osc.width = img.naturalWidth;
+        osc.height = img.naturalHeight;
+        osc2.drawImage(img, 0, 0);
+        calculateScale();
+        redrawCircles();
+    };
 }
 
-function prepareCirclesStructure() {
-    tree = new TreeModel();
-    root = tree.parse({name: "0", children: []});
+/**
+    * Create the default tree structure (one single root node).
+**/
+function resetCirclesStructure() {
+    root = treeJS.parse({name: "0", children: []});
 }
 
+/**
+    * Draw the background to the canvas.
+    * If dI is set, draws the image itself, else a gray surface.
+    * This overwrites all other pixels currently present.
+**/
 function drawBackground() {
-    if (d_dI) {
+    if (dI) {
         cc2.drawImage(img, 0, 0, cc.width, cc.height);
     } else {
         cc2.fillStyle = "#202020";
@@ -90,25 +114,36 @@ function drawBackground() {
     }
 }
 
+/**
+    * Swap Image Backgound and gray background.
+    * Redraws the complete circle tree.
+**/
 function swapBackground() {
-    d_dI = !d_dI;
+    dI = !dI;
     redrawCircles();
 }
 
 function onCirclesInputHover(event) {
     if (mousedown) {
-        if (updateTree(event) == true) {
+        if (updateTree(event) != null) {
             redrawCircles();
         }
     }
 }
 
 function onCirclesInputClick(event) {
-    if (updateTree(event) == true) {
+    if (updateTree(event)) {
         redrawCircles();
     }
 }
 
+/**
+    * Processes user input on the canvas.
+    * Adds new subcirlce nodes to the tree model.
+    * Does NOT draw the changes on the canvas.
+    * @param {event} event - The user input event (mouse or touch)
+    * @return {node} The node (subtree) that changed, null if nothing changed
+**/
 function updateTree(event) {
     // Get relative position in displayed image space
     var x_rel = event.offsetX;
@@ -122,7 +157,7 @@ function updateTree(event) {
     // Only redraw if something changed
     if (leaf == ln || leaf == null) {
         log("Nothing changed, no redraw.");
-        return false;
+        return null;
     }
     // Remember last updated leaf
     ln = leaf;
@@ -133,16 +168,17 @@ function updateTree(event) {
 
     // Add four new child nodes
     for (let i = 1; i < 5; i++) {
-        let newLeaf = tree.parse({name: leaf.model.name + i, children: []});
+        let newLeaf = treeJS.parse({name: leaf.model.name + i, children: []});
         leaf.addChild(newLeaf);
     }
 
-    return true;
+    return leaf;
 }
 
+/**
+    * Redraws the complete node tree.
+**/
 function redrawCircles() {
-    // This will be invoked many times so I dont want to use a recursive aproach
-
     drawBackground();
     root.walk(function(node) {
         if (!node.hasChildren()) {
@@ -162,6 +198,11 @@ function redrawCircles() {
     });
 }
 
+/**
+    * Determines the position of a node (the circle´s center).
+    * @param {String} circle_ID - The id (name proprty) of the node
+    * @return {Array} [X,Y] Coordinates of the node
+**/
 function getCanvasPos(circle_ID) {
     circle_ID = circle_ID.slice(1);
     var pos_x = cc.width * 0.5;
@@ -193,8 +234,13 @@ function getCanvasPos(circle_ID) {
     return [pos_x, pos_y];
 }
 
+/**
+    * Determines the leaf of the node tree which covers a certain position.
+    * @param {Array} position - [X,Y] Position
+    * @return {Node} The closest node
+**/
 function getClosestLeaf(position) {
-    current_node = root;
+    var current_node = root;
     var current_depth = 0;
     while (current_node.hasChildren()) {
 
@@ -217,8 +263,6 @@ function getClosestLeaf(position) {
             q = "3";
         } else if (position[0] < node_pos[0] && position[1] > node_pos[1]) {
             q = "4";
-        } else {
-            log("Error during getClosestLeaf!");
         }
 
         current_node = root.first(function(node) {
@@ -229,6 +273,9 @@ function getClosestLeaf(position) {
     return current_node;
 }
 
+/**
+    * Conditioned Logging wrapper.
+**/
 function log(what) {
     if (logging) {
         console.log(what);
