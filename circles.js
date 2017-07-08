@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     initializeCirclesCanvas();
     resetCirclesStructure();
     setNewImage("https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-218355.jpg");
+    setupControls();
 });
 
 /**
@@ -271,6 +272,19 @@ function getClosestLeaf(position) {
     }
 
     return current_node;
+}
+
+/**
+    * Register Callbacks for user interaction on button press.
+**/
+function setupControls() {
+    document.getElementById("b_circles_reset").addEventListener("click", function() {
+        resetCirclesStructure();
+        redrawCircles();
+    });
+    document.getElementById("b_circles_setImageURL").addEventListener("click", function() {
+        setNewImage(this.form.elements[0].value);
+    });
 }
 
 /**

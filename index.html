@@ -13,12 +13,20 @@
 <div id="base_wrapper">
     <header>
         <h1>Circles</h1>
-        <h2>A new implementation of the popular activity with a creative name</h2>
-        <h4>I´m not good with names...</h3>
+        <h2>An HTML Canvas Experiment</h2>
     </header>
     <main>
         <div id="circles_canvas_container">
             <canvas id="circles_canvas" />
+        </div>
+        <div>
+            <form id="circles_setImageURL" class="f_left">
+                <input type="text" name="image_url" placeholder="Enter Image URL here..." />
+                <input id="b_circles_setImageURL" type="button" value="Change Image">
+            </form>
+            <form id="circles_reset" class="f_right">
+                <input id="b_circles_reset" type="button" value="Reset Circles">
+            </form>
         </div>
     </main>
     <footer>
