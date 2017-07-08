@@ -28,11 +28,15 @@ var dI = false; // If the image is drawed in the Background
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    cd = document.getElementById("circles_canvas_container");
     initializeCirclesCanvas();
     resetCirclesStructure();
     setNewImage("https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-218355.jpg");
     setupControls();
+
+    window.addEventListener("resize", function() {
+        calculateScale();
+        redrawCircles();
+    });
 });
 
 /**
@@ -40,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     * This function needs to run once the page is loaded
 **/
 function initializeCirclesCanvas() {
+    cd = document.getElementById("circles_canvas_container");
     osc = document.createElement("canvas");
     osc2 = osc.getContext("2d");
 
