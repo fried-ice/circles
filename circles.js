@@ -5,7 +5,7 @@
 */
 
 const max_depth = 7; // Maximum count of horizontal circels
-const logging = true; // Enable logging to the console
+const logging = false; // Enable logging to the console
 
 var mousedown = false; // If the left moused button was pressed, but not released yet
 
@@ -110,13 +110,19 @@ function resetCirclesStructure() {
     * Draw the background to the canvas.
     * If dI is set, draws the image itself, else a gray surface.
     * This overwrites all other pixels currently present.
+    * If no dimensions are provided, redraws the complete canvas background.
+    * @param {Array} pos_top_left - [X,Y] coordinates of top left corner of requested redraw
+    * @param {Array} size - [width, height] of the background starting from pos_top_left
 **/
-function drawBackground() {
+function drawBackground(pos_top_left, size) {
+    if (pos_top_left == undefined || size == undefined) {
+        pos_top_left = [0, 0]; size = [cc.width, cc.height];
+    }
     if (dI) {
-        cc2.drawImage(img, 0, 0, cc.width, cc.height);
+        cc2.drawImage(img, pos_top_left[0] * scale, pos_top_left[1] * scale, size[0] * scale, size[1] * scale, pos_top_left[0], pos_top_left[1], size[0], size[1]);
     } else {
         cc2.fillStyle = "#202020";
-        cc2.fillRect(0, 0, cc.width, cc.height);
+        cc2.fillRect(pos_top_left[0], pos_top_left[1], size[0], size[1]);
     }
 }
 
@@ -131,15 +137,13 @@ function swapBackground() {
 
 function onCirclesInputHover(event) {
     if (mousedown) {
-        if (updateTree(event) != null) {
-            redrawCircles();
-        }
+        onCirclesInputClick(event);
     }
 }
 
 function onCirclesInputClick(event) {
-    if (updateTree(event)) {
-        redrawCircles();
+    if ((node = updateTree(event)) != null) {
+        redrawCircles(node);
     }
 }
 
@@ -182,16 +186,24 @@ function updateTree(event) {
 }
 
 /**
-    * Redraws the complete node tree.
+    * Redraws the node tree and its background.
+    * If no start node is provided, redraws the complete tree.
+    * @param {Node} startNode - The node sub tree to redraw
 **/
-function redrawCircles() {
-    drawBackground();
-    root.walk(function(node) {
+function redrawCircles(startNode) {
+    if (startNode == undefined) {
+        startNode = root;
+        drawBackground();
+    } else {
+        let pos = getCanvasPos(startNode.model.name);
+        let r = getRadius(startNode.model.name);
+        drawBackground([pos[0] - r, pos[1] - r], [r * 2, r * 2]);
+    }
+    startNode.walk(function(node) {
         if (!node.hasChildren()) {
 
             var pos = getCanvasPos(node.model.name);
-            var t = Math.pow(2, -node.model.name.length);
-            var radius = Math.min(cc.width, cc.height) * t;
+            var radius = getRadius(node.model.name);
 
             // Get color data from original image
             var col = osc2.getImageData(pos[0] * scale, pos[1] * scale, 1, 1).data;
@@ -202,6 +214,15 @@ function redrawCircles() {
             cc2.fill();
         }
     });
+}
+
+/**
+    * Determines the radius of a node
+    * @param {String} circle_ID - The id (name proprty) of the node
+    * @return {Number} The radius of the nodes pixel representation
+**/
+function getRadius(circle_ID) {
+    return Math.min(cc.width, cc.height) * Math.pow(2, -circle_ID.length);
 }
 
 /**
