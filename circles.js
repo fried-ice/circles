@@ -23,6 +23,9 @@ var cc2; // 2d context of main canvas
 var osc; // Off screen canvas
 var osc2; // Off screen canvas 2d contex
 
+var bc; // Backgound Canvas
+var bc2; // Background Canvas 2d context
+
 var cd; // div containg the canvas
 var scale = 1; // Linear factor describing the scale of displayed image to source image
 var i_scale = 1; // Inverse of scale
@@ -42,6 +45,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     window.addEventListener("resize", function() {
         calculateScale();
+        drawBackground();
         redrawCircles();
     });
 });
@@ -57,6 +61,17 @@ function initializeCirclesCanvas() {
 
     cc = document.getElementById("circles_canvas");
     cc2 = cc.getContext("2d");
+
+    // Create a secondary canvas only for the background
+    // When only the background changes, there is no need to redraw the complete node tree
+    bc = document.createElement("canvas");
+    bc.style.position = "absolute";
+    bc.style.backgroundcolor = "transparent";
+    bc.style.top = "0px";
+    bc.style.left = "0px";
+    bc.style.zIndex = "4";
+    bc2 = bc.getContext("2d");
+    cd.insertBefore(bc, cc);
 
     document.body.onkeyup = function(e){
         if(e.keyCode == 32){ toggleBackground();}
@@ -84,6 +99,9 @@ function calculateScale() {
         scale = 1;
         i_scale = 1;
     }
+
+    bc.width = cc.width;
+    bc.height = cc.height;
 }
 
 /**
@@ -102,6 +120,7 @@ function setNewImage(url) {
         osc.height = img.naturalHeight;
         osc2.drawImage(img, 0, 0);
         calculateScale();
+        drawBackground();
         redrawCircles();
     };
 }
@@ -126,20 +145,19 @@ function drawBackground(pos_top_left, size) {
         pos_top_left = [0, 0]; size = [cc.width, cc.height];
     }
     if (dI) {
-        cc2.drawImage(img, pos_top_left[0] * scale, pos_top_left[1] * scale, size[0] * scale, size[1] * scale, pos_top_left[0], pos_top_left[1], size[0], size[1]);
+        bc2.drawImage(img, pos_top_left[0] * scale, pos_top_left[1] * scale, size[0] * scale, size[1] * scale, pos_top_left[0], pos_top_left[1], size[0], size[1]);
     } else {
-        cc2.fillStyle = bC;
-        cc2.fillRect(pos_top_left[0], pos_top_left[1], size[0], size[1]);
+        bc2.fillStyle = bC;
+        bc2.fillRect(pos_top_left[0], pos_top_left[1], size[0], size[1]);
     }
 }
 
 /**
     * Swap Image Backgound and gray background.
-    * Redraws the complete circle tree.
 **/
 function toggleBackground() {
     dI = !dI;
-    redrawCircles();
+    drawBackground();
 }
 
 function onCirclesInputHover(event) {
@@ -194,19 +212,19 @@ function updateTree(event) {
 }
 
 /**
-    * Redraws the node tree and its background.
+    * Redraws the node tree.
     * If no start node is provided, redraws the complete tree.
     * @param {Node} startNode - The node sub tree to redraw
 **/
 function redrawCircles(startNode) {
     if (startNode == undefined) {
         startNode = root;
-        drawBackground();
+        cc2.clearRect(0, 0, cc.width, cc.height);
     } else if (drawing_mode_current != DRAWING_MODE_SQUARES) {
-        // There is no need to redraw the background as we are covering the complete are when using squares
+        // There is no need to clear as we are covering the complete area when using squares
         let pos = getCanvasPos(startNode.model.name);
         let r = getRadius(startNode.model.name);
-        drawBackground([pos[0] - r, pos[1] - r], [r * 2, r * 2]);
+        cc2.clearRect(pos[0] - r, pos[1] - r, r * 2, r * 2);
     }
     startNode.walk(function(node) {
         if (!node.hasChildren()) {
@@ -338,7 +356,7 @@ function setupControls() {
     });
     document.getElementById("b_circles_setBColor").addEventListener("click", function() {
         bC = this.form.elements[0].value;
-        redrawCircles();
+        drawBackground();
     });
     document.getElementById("b_circles_setImageFile").addEventListener("click", function() {
         img_file = this.form.elements[0].files[0];
