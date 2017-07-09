@@ -4,8 +4,10 @@
 
 */
 
-const max_depth = 7; // Maximum count of horizontal circels
 const logging = false; // Enable logging to the console
+
+var max_depth = 7; // Maximum count of horizontal circles
+var bC = "#202020";
 
 var mousedown = false; // If the left moused button was pressed, but not released yet
 
@@ -52,7 +54,7 @@ function initializeCirclesCanvas() {
     cc2 = cc.getContext("2d");
 
     document.body.onkeyup = function(e){
-        if(e.keyCode == 32){ swapBackground();}
+        if(e.keyCode == 32){ toggleBackground();}
     }
 
     cc.addEventListener("mousemove", onCirclesInputHover);
@@ -121,7 +123,7 @@ function drawBackground(pos_top_left, size) {
     if (dI) {
         cc2.drawImage(img, pos_top_left[0] * scale, pos_top_left[1] * scale, size[0] * scale, size[1] * scale, pos_top_left[0], pos_top_left[1], size[0], size[1]);
     } else {
-        cc2.fillStyle = "#202020";
+        cc2.fillStyle = bC;
         cc2.fillRect(pos_top_left[0], pos_top_left[1], size[0], size[1]);
     }
 }
@@ -130,7 +132,7 @@ function drawBackground(pos_top_left, size) {
     * Swap Image Backgound and gray background.
     * Redraws the complete circle tree.
 **/
-function swapBackground() {
+function toggleBackground() {
     dI = !dI;
     redrawCircles();
 }
@@ -310,6 +312,18 @@ function setupControls() {
     });
     document.getElementById("b_circles_setImageURL").addEventListener("click", function() {
         setNewImage(this.form.elements[0].value);
+    });
+    document.getElementById("b_circles_toggle_background").addEventListener("click", toggleBackground);
+    document.getElementById("b_circles_set_depth").addEventListener("click", function() {
+        max_depth = this.form.elements[0].value;
+    });
+    document.getElementById("b_circles_setBColor").addEventListener("click", function() {
+        bC = this.form.elements[0].value;
+        redrawCircles();
+    });
+    document.getElementById("b_circles_setImageFile").addEventListener("click", function() {
+        img_file = this.form.elements[0].files[0];
+        setNewImage(URL.createObjectURL(img_file));
     });
 }
 
