@@ -4,7 +4,7 @@
 
 */
 
-const logging = false; // Enable logging to the console
+var logging = false; // Enable logging to the console
 
 var max_depth = 7; // Maximum count of horizontal circles
 var bC = "#202020";
@@ -55,7 +55,7 @@ function initializeCirclesCanvas() {
 
     document.body.onkeyup = function(e){
         if(e.keyCode == 32){ toggleBackground();}
-    }
+    };
 
     cc.addEventListener("mousemove", onCirclesInputHover);
     cc.addEventListener("click", onCirclesInputClick);
@@ -69,9 +69,9 @@ function initializeCirclesCanvas() {
 **/
 function calculateScale() {
     if (osc.width > cd.clientWidth) {
-        cc.width = cd.clientWidth
-        scale = (osc.width / cd.clientWidth)
-        i_scale = (1/scale)
+        cc.width = cd.clientWidth;
+        scale = (osc.width / cd.clientWidth);
+        i_scale = (1/scale);
         cc.height = osc.height * i_scale;
     } else {
         cc.width = osc.width;
@@ -144,7 +144,8 @@ function onCirclesInputHover(event) {
 }
 
 function onCirclesInputClick(event) {
-    if ((node = updateTree(event)) != null) {
+    var node = updateTree(event);
+    if (node != null) {
         redrawCircles(node);
     }
 }
