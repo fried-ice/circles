@@ -4,6 +4,11 @@
 
 */
 
+// Different Drawing modes
+const DRAWING_MODE_CIRCLES = 1;
+const DRAWING_MODE_SQUARES = 2;
+var drawing_mode_current = 1;
+
 var logging = false; // Enable logging to the console
 
 var max_depth = 7; // Maximum count of horizontal circles
@@ -197,7 +202,8 @@ function redrawCircles(startNode) {
     if (startNode == undefined) {
         startNode = root;
         drawBackground();
-    } else {
+    } else if (drawing_mode_current != DRAWING_MODE_SQUARES) {
+        // There is no need to redraw the background as we are covering the complete are when using squares
         let pos = getCanvasPos(startNode.model.name);
         let r = getRadius(startNode.model.name);
         drawBackground([pos[0] - r, pos[1] - r], [r * 2, r * 2]);
@@ -206,15 +212,27 @@ function redrawCircles(startNode) {
         if (!node.hasChildren()) {
 
             var pos = getCanvasPos(node.model.name);
-            var radius = getRadius(node.model.name);
+            var r = getRadius(node.model.name);
 
             // Get color data from original image
             var col = osc2.getImageData(pos[0] * scale, pos[1] * scale, 1, 1).data;
-            // And fill a circle
             cc2.fillStyle = "rgba("+ col[0] + "," + col[1] + "," + col[2] + "," + col[3] + ")";
-            cc2.beginPath();
-            cc2.arc(pos[0], pos[1], radius , 0, 2*Math.PI);
-            cc2.fill();
+
+            // And draw the desired object
+            switch (drawing_mode_current) {
+                case DRAWING_MODE_CIRCLES:
+                    cc2.beginPath();
+                    cc2.arc(pos[0], pos[1], r , 0, 2 * Math.PI);
+                    cc2.fill();
+                    break;
+                case DRAWING_MODE_SQUARES:
+                    cc2.fillRect(pos[0] - r, pos[1] - r, r * 2, r * 2);
+                    break;
+                default:
+                    cc2.font = "30px Arial";
+                    cc2.fillText("No valid drawing mode set!",10,50);
+                    break;
+            }
         }
     });
 }
@@ -325,6 +343,10 @@ function setupControls() {
     document.getElementById("b_circles_setImageFile").addEventListener("click", function() {
         img_file = this.form.elements[0].files[0];
         setNewImage(URL.createObjectURL(img_file));
+    });
+    document.getElementById("b_circles_draw_mode").addEventListener("click", function() {
+        drawing_mode_current == DRAWING_MODE_CIRCLES ? drawing_mode_current = DRAWING_MODE_SQUARES : drawing_mode_current = DRAWING_MODE_CIRCLES;
+        redrawCircles();
     });
 }
 
