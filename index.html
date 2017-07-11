@@ -20,18 +20,25 @@
             <canvas id="circles_canvas"></canvas>
         </div>
         <div id="circles_controls">
-            <div><form id="circles_toggle_background" class="circles_form">
-                <input id="b_circles_toggle_background" type="button" value="Toggle Background" />
-            </form></div>
             <div><form id="circles_reset" class="circles_form">
                 <input id="b_circles_reset" type="button" value="Reset Circles" />
+            </form></div>
+            <div><form id="circles_draw_mode" class="circles_form">
+                <input id="b_circles_draw_mode" type="button" value="Toggle drawing mode" />
+            </form></div>
+            <div><form id="circles_toggle_background" class="circles_form">
+                <input id="b_circles_toggle_background" type="button" value="Toggle Background" />
             </form></div>
             <div><form id="circles_set_depth" class="circles_form">
                 <input type="number" name="maximum_depth" step="1" min="1" value="7" />
                 <input id="b_circles_set_depth" type="button" value="Set Maximum Depth" />
             </form></div>
-            <div><form id="circles_draw_mode" class="circles_form">
-                <input id="b_circles_draw_mode" type="button" value="Toggle drawing mode" />
+            <div><form id="circles_apply_max_depth" class="circles_form">
+                <input id="b_circles_apply_max_depth" type="button" value="Apply Maximum Depth" />
+            </form></div>
+            <div><form id="circles_setBColor" class="circles_form">
+                <input type="color" name="bColor" value="#202020" />
+                <input id="b_circles_setBColor" type="button" value="Set Background Color" />
             </form></div>
             <div><form id="circles_setImageFile" class="circles_form">
                 <input type="file" name="Image_file" />
@@ -40,10 +47,6 @@
             <div><form id="circles_setImageURL" class="circles_form">
                 <input type="url" name="image_url" placeholder="Enter Image URL here..." />
                 <input id="b_circles_setImageURL" type="button" value="Change Image" />
-            </form></div>
-            <div><form id="circles_setBColor" class="circles_form">
-                <input type="color" name="bColor" value="#202020" />
-                <input id="b_circles_setBColor" type="button" value="Set Background Color" />
             </form></div>
         </div>
     </main>

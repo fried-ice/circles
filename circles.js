@@ -133,6 +133,31 @@ function resetCirclesStructure() {
 }
 
 /**
+    * Create a node tree where all visibile nodes have maximum depth
+**/
+function setFullSpreadTree() {
+    root = treeJS.parse({name: "0", children: []});
+    addEvenChildren(root, max_depth);
+}
+
+/**
+    * Recursively adds 4 child nodes to the given node.
+    * @param {Node} parent - The node to append new child nodes to
+    * @param {Number} depth - Depth of the recursion
+**/
+function addEvenChildren(parent, depth) {
+    if (depth <= 0) {
+        return;
+    }
+    for (let i = 1; i < 5; i++) {
+        let newLeaf = treeJS.parse({name: parent.model.name + i, children: []});
+        parent.addChild(newLeaf);
+
+        addEvenChildren(newLeaf, depth-1);
+    }
+}
+
+/**
     * Draw the background to the canvas.
     * If dI is set, draws the image itself, else a gray surface.
     * This overwrites all other pixels currently present.
@@ -203,10 +228,7 @@ function updateTree(event) {
     }
 
     // Add four new child nodes
-    for (let i = 1; i < 5; i++) {
-        let newLeaf = treeJS.parse({name: leaf.model.name + i, children: []});
-        leaf.addChild(newLeaf);
-    }
+    addEvenChildren(leaf, 1);
 
     return leaf;
 }
@@ -364,6 +386,10 @@ function setupControls() {
     });
     document.getElementById("b_circles_draw_mode").addEventListener("click", function() {
         drawing_mode_current == DRAWING_MODE_CIRCLES ? drawing_mode_current = DRAWING_MODE_SQUARES : drawing_mode_current = DRAWING_MODE_CIRCLES;
+        redrawCircles();
+    });
+    document.getElementById("b_circles_apply_max_depth").addEventListener("click", function() {
+        setFullSpreadTree();
         redrawCircles();
     });
 }
