@@ -245,14 +245,14 @@ function redrawCircles(startNode) {
     } else if (drawing_mode_current != DRAWING_MODE_SQUARES) {
         // There is no need to clear as we are covering the complete area when using squares
         let pos = getCanvasPos(startNode.model.name);
-        let r = getRadius(startNode.model.name);
+        let r = getRadius(startNode.model.name.length);
         cc2.clearRect(pos[0] - r, pos[1] - r, r * 2, r * 2);
     }
     startNode.walk(function(node) {
         if (!node.hasChildren()) {
 
             var pos = getCanvasPos(node.model.name);
-            var r = getRadius(node.model.name);
+            var r = getRadius(node.model.name.length);
 
             // Get color data from original image
             var col = osc2.getImageData(pos[0] * scale, pos[1] * scale, 1, 1).data;
@@ -279,11 +279,12 @@ function redrawCircles(startNode) {
 
 /**
     * Determines the radius of a node
-    * @param {String} circle_ID - The id (name proprty) of the node
+    * @param {Number} circle_ID_length - The length of the id (name proprty) of the node
     * @return {Number} The radius of the nodes pixel representation
 **/
-function getRadius(circle_ID) {
-    return Math.min(cc.width, cc.height) * Math.pow(2, -circle_ID.length);
+function getRadius(circle_ID_length) {
+    // Do not draw elements smaller than pixel size - Radius is at least 0.5 pixel
+    return Math.max(0.5, Math.min(cc.width, cc.height) * Math.pow(2, -circle_ID_length));
 }
 
 /**
@@ -295,25 +296,24 @@ function getCanvasPos(circle_ID) {
     circle_ID = circle_ID.slice(1);
     var pos_x = cc.width * 0.5;
     var pos_y = cc.height * 0.5;
-    var dist = Math.min(cc.width, cc.height);
     for (let i = 0; i < circle_ID.length; i++) {
-        var t = Math.pow(2,((-i-2)));
+        var r = getRadius(i+2);
         switch (circle_ID[i]) {
             case "1":
-                pos_x -= t * dist;
-                pos_y -= t * dist;
+                pos_x -= r;
+                pos_y -= r;
                 break;
             case "2":
-                pos_x += t * dist;
-                pos_y -= t * dist;
+                pos_x += r;
+                pos_y -= r;
                 break;
             case "3":
-                pos_x += t * dist;
-                pos_y += t * dist;
+                pos_x += r;
+                pos_y += r;
                 break;
             case "4":
-                pos_x -= t * dist;
-                pos_y += t * dist;
+                pos_x -= r;
+                pos_y += r;
                 break;
             default:
                 log("Error during getCanvasPos!");
