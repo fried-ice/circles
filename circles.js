@@ -9,12 +9,16 @@ const DRAWING_MODE_CIRCLES = 1;
 const DRAWING_MODE_SQUARES = 2;
 var drawing_mode_current = 1;
 
+// Different Interaction modes
+const INTERACTION_MODE_SPLIT = 1;
+const INTERACTION_MODE_MERGE = 2;
+
 var logging = false; // Enable logging to the console
 
 var max_depth = 7; // Maximum count of horizontal circles
 var bC = "#202020";
 
-var mousedown = false; // If the left moused button was pressed, but not released yet
+var mousedown_left = false; // If the left moused button was pressed, but not released yet
 
 var img; // The main Image object
 
@@ -79,8 +83,20 @@ function initializeCirclesCanvas() {
 
     cc.addEventListener("mousemove", onCirclesInputHover);
     cc.addEventListener("click", onCirclesInputClick);
-    cc.addEventListener("mousedown", function() {mousedown = true;});
-    cc.addEventListener("mouseup", function() {mousedown = false;});
+    cc.addEventListener("mousedown", function(event) {
+        if (event.which == 1) {
+            mousedown_left = true;
+        }
+    });
+    cc.addEventListener("mouseup", function(event) {
+        if (event.which == 1) {
+            mousedown_left = false;
+        }
+    });
+    cc.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+        onCirclesInputClick(event);
+    });
 }
 
 /**
@@ -136,6 +152,7 @@ function resetCirclesStructure() {
     * Create a node tree where all visibile nodes have maximum depth
 **/
 function setFullSpreadTree() {
+    // TODO Proper Memory Management
     root = treeJS.parse({name: "0", children: []});
     addEvenChildren(root, max_depth);
 }
@@ -155,6 +172,16 @@ function addEvenChildren(parent, depth) {
 
         addEvenChildren(newLeaf, depth-1);
     }
+}
+
+/**
+    * Removes all child nodes of a node recursively.
+    * @param {Node} parent - The corresponding node to edit
+**/
+function removeAllChildren(parent) {
+    // TODO Proper Memory Management
+    parent.children = [];
+    return;
 }
 
 /**
@@ -186,26 +213,31 @@ function toggleBackground() {
 }
 
 function onCirclesInputHover(event) {
-    if (mousedown) {
+    if (mousedown_left) {
         onCirclesInputClick(event);
     }
 }
 
 function onCirclesInputClick(event) {
-    var node = updateTree(event);
+    if (event.buttons == 2) {
+        var node = updateTree(event, INTERACTION_MODE_MERGE);
+    } else {
+        var node = updateTree(event, INTERACTION_MODE_SPLIT);
+    }
+
     if (node != null) {
         redrawCircles(node);
     }
 }
-
 /**
     * Processes user input on the canvas.
-    * Adds new subcirlce nodes to the tree model.
+    * Adds new subcirlce nodes to the tree model or removes the nodes and all its siblings.
     * Does NOT draw the changes on the canvas.
     * @param {event} event - The user input event (mouse or touch)
+    * @param {INTERACTION_MODE} interactionMode - How to update - Split or Merge
     * @return {node} The node (subtree) that changed, null if nothing changed
 **/
-function updateTree(event) {
+function updateTree(event, interactionMode) {
     // Get relative position in displayed image space
     var x_rel = event.offsetX;
     var y_rel = event.offsetY;
@@ -220,16 +252,29 @@ function updateTree(event) {
         log("Nothing changed, no redraw.");
         return null;
     }
-    // Remember last updated leaf
-    ln = leaf;
 
     if (leaf.hasChildren()) {
         log("Something DRASTICALLY went wrong!!!");
     }
 
-    // Add four new child nodes
-    addEvenChildren(leaf, 1);
-
+    // Change behaviour based on selected interaction method
+    switch (interactionMode) {
+        case INTERACTION_MODE_SPLIT:
+            // Do not split when allready at max tree depth
+            if (leaf.model.name.length > max_depth) {
+                return;
+            }
+            // Add four new child nodes
+            addEvenChildren(leaf, 1);
+            // Remember last updated leaf
+            ln = leaf;
+            break;
+        case INTERACTION_MODE_MERGE:
+            leaf = leaf.parent != undefined ? leaf.parent : leaf;
+            removeAllChildren(leaf);
+            ln = null;
+            break;
+    }
     return leaf;
 }
 
@@ -334,7 +379,7 @@ function getClosestLeaf(position) {
 
         // Limit maximum depth
         current_depth++;
-        if (current_depth >= max_depth) {
+        if (current_depth > max_depth) {
             return null;
         }
 
