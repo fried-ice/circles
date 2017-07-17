@@ -219,7 +219,7 @@ function onCirclesInputHover(event) {
 }
 
 function onCirclesInputClick(event) {
-    if (event.buttons == 2) {
+    if (event.button == 2) {
         var node = updateTree(event, INTERACTION_MODE_MERGE);
     } else {
         var node = updateTree(event, INTERACTION_MODE_SPLIT);
