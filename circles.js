@@ -407,6 +407,59 @@ function getClosestLeaf(position) {
 }
 
 /**
+    * Dumps the current view to a PNG file of the same dimensions as the original image in a new browser window/tab.
+    * This process needs to rerender the scene once.
+    * @param {bool} include_background - Weather to blend the current background into the image
+    * @param {bool} crop_image - Weather to cut space not affected by circles (outside the square)
+**/
+function dumpCanvasToFile(include_background, crop_image) {
+    // Backup current state
+    var image_data_backup = cc2.getImageData(0, 0, cc.width, cc.height);
+
+    // Resize canvas to original image size
+    cc.width = osc.width;
+    cc.height = osc.height;
+    scale = 1; i_scale = 1;
+
+    redrawCircles();
+
+    if (include_background) {
+        // Draw Background to enlarged background canvas
+        bc.height = cc.height;
+        bc.width = cc.width;
+        drawBackground();
+        // Temporary change blend mode -> background is drawn behind original image
+        cc2.globalCompositeOperation = "destination-over";
+        cc2.drawImage(bc, 0, 0);
+        // Set blending mode back to default behaviour
+        cc2.globalCompositeOperation = "source-over"
+    }
+
+    var export_image_data;
+    if (crop_image) {
+        // Crop export image to square
+        if (cc.width > cc.height) {
+            export_image_data = cc2.getImageData((cc.width - cc.height) * 0.5, 0, cc.height, cc.height);
+            cc.width = cc.height;
+        } else {
+            export_image_data = cc2.getImageData(0, (cc.height - cc.width) * 0.5, cc.width, cc.width);
+            cc.height = cc.width;
+        }
+    } else {
+        export_image_data = cc2.getImageData(0, 0, cc.width, cc.height);
+    }
+
+    // Export image data to PNG file in new Tab / Window
+    cc2.putImageData(export_image_data, 0, 0);
+    window.open(cc.toDataURL("png"));
+
+    // Restore old state
+    calculateScale();
+    drawBackground();
+    cc2.putImageData(image_data_backup, 0, 0);
+}
+
+/**
     * Register Callbacks for user interaction on button press.
 **/
 function setupControls() {
@@ -436,6 +489,11 @@ function setupControls() {
     document.getElementById("b_circles_apply_max_depth").addEventListener("click", function() {
         setFullSpreadTree();
         redrawCircles();
+    });
+    document.getElementById("b_circles_dump_canvas").addEventListener("click", function() {
+        var include_background = document.getElementById("cb_circles_dump_canvas_bg").checked;
+        var crop_image = document.getElementById("cb_circles_dump_canvas_crop").checked;
+        dumpCanvasToFile(include_background, crop_image);
     });
 }
 
