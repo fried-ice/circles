@@ -451,7 +451,9 @@ function dumpCanvasToFile(include_background, crop_image) {
 
     // Export image data to PNG file in new Tab / Window
     cc2.putImageData(export_image_data, 0, 0);
-    window.open(cc.toDataURL("png"));
+    img_data = cc.toDataURL("image/png");
+    var win = window.open("");
+    win.document.write("<img src='" + img_data + "' style='max-width:98vw; max-height:98vh;' />");
 
     // Restore old state
     calculateScale();
