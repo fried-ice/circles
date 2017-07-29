@@ -72,7 +72,6 @@ function initializeCirclesCanvas() {
     bc.style.position = "absolute";
     bc.style.backgroundcolor = "transparent";
     bc.style.top = "0px";
-    bc.style.left = "0px";
     bc.style.zIndex = "4";
     bc2 = bc.getContext("2d");
     cd.insertBefore(bc, cc);
@@ -104,17 +103,13 @@ function initializeCirclesCanvas() {
     * Do not rescale if image dimensions are smaller than the canvas div.
 **/
 function calculateScale() {
-    if (osc.width > cd.clientWidth) {
-        cc.width = cd.clientWidth;
-        scale = (osc.width / cd.clientWidth);
-        i_scale = (1/scale);
-        cc.height = osc.height * i_scale;
-    } else {
-        cc.width = osc.width;
-        cc.height = osc.height;
-        scale = 1;
-        i_scale = 1;
-    }
+    var h_scale = osc.width / cd.clientWidth;
+    var v_scale = osc.height / (0.95 * window.innerHeight);
+    scale = Math.max(1.0, Math.max(v_scale, h_scale));
+    i_scale = 1 / scale;
+
+    cc.width = osc.width * i_scale;
+    cc.height = osc.height * i_scale;
 
     bc.width = cc.width;
     bc.height = cc.height;
