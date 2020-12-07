@@ -44,7 +44,7 @@ var dI = false; // If the image is drawed in the Background
 document.addEventListener("DOMContentLoaded", function(event) {
     initializeCirclesCanvas();
     resetCirclesStructure();
-    setNewImage("https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-218355.jpg");
+    setNewImage("default_image.jpg");
     setupControls();
 
     window.addEventListener("resize", function() {
